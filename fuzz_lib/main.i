@@ -1,5 +1,5 @@
 # 1 "main.c"
-# 1 "/cygdrive/d/GDrive/Proyects/libs/c/fuzz_lib//"
+# 1 "/cygdrive/d/GDrive/Proyects/FuzzLib/fuzz_lib//"
 # 1 "<built-in>"
 # 1 "<command-line>"
 # 1 "main.c"
@@ -1790,135 +1790,7 @@ extern __attribute__((dllimport)) enum __fdlibm_version __fdlib_version;
 # 615 "/usr/include/math.h" 3 4
 
 # 33 "fuzzfis.h" 2
-# 1 "/usr/include/string.h" 1 3 4
-# 17 "/usr/include/string.h" 3 4
-# 1 "/usr/lib/gcc/x86_64-pc-cygwin/4.9.3/include/stddef.h" 1 3 4
-# 18 "/usr/include/string.h" 2 3 4
-
-
-
-void * __attribute__((__cdecl__)) memchr (const void *, int, size_t);
-int __attribute__((__cdecl__)) memcmp (const void *, const void *, size_t);
-void * __attribute__((__cdecl__)) memcpy (void * , const void * , size_t);
-void * __attribute__((__cdecl__)) memmove (void *, const void *, size_t);
-void * __attribute__((__cdecl__)) memset (void *, int, size_t);
-char *__attribute__((__cdecl__)) strcat (char *, const char *);
-char *__attribute__((__cdecl__)) strchr (const char *, int);
-int __attribute__((__cdecl__)) strcmp (const char *, const char *);
-int __attribute__((__cdecl__)) strcoll (const char *, const char *);
-char *__attribute__((__cdecl__)) strcpy (char *, const char *);
-size_t __attribute__((__cdecl__)) strcspn (const char *, const char *);
-char *__attribute__((__cdecl__)) strerror (int);
-size_t __attribute__((__cdecl__)) strlen (const char *);
-char *__attribute__((__cdecl__)) strncat (char *, const char *, size_t);
-int __attribute__((__cdecl__)) strncmp (const char *, const char *, size_t);
-char *__attribute__((__cdecl__)) strncpy (char *, const char *, size_t);
-char *__attribute__((__cdecl__)) strpbrk (const char *, const char *);
-char *__attribute__((__cdecl__)) strrchr (const char *, int);
-size_t __attribute__((__cdecl__)) strspn (const char *, const char *);
-char *__attribute__((__cdecl__)) strstr (const char *, const char *);
-
-char *__attribute__((__cdecl__)) strtok (char *, const char *);
-
-size_t __attribute__((__cdecl__)) strxfrm (char *, const char *, size_t);
-
-
-char *__attribute__((__cdecl__)) strtok_r (char *, const char *, char **);
-
-
-int __attribute__((__cdecl__)) bcmp (const void *, const void *, size_t);
-void __attribute__((__cdecl__)) bcopy (const void *, void *, size_t);
-void __attribute__((__cdecl__)) bzero (void *, size_t);
-int __attribute__((__cdecl__)) ffs (int);
-char *__attribute__((__cdecl__)) index (const char *, int);
-
-
-void * __attribute__((__cdecl__)) memccpy (void * , const void * , int, size_t);
-
-
-
-
-
-void * __attribute__((__cdecl__)) memrchr (const void *, int, size_t);
-
-
-
-
-char *__attribute__((__cdecl__)) rindex (const char *, int);
-
-char *__attribute__((__cdecl__)) stpcpy (char *, const char *);
-char *__attribute__((__cdecl__)) stpncpy (char *, const char *, size_t);
-
-int __attribute__((__cdecl__)) strcasecmp (const char *, const char *);
-
-
-
-
-
-
-char *__attribute__((__cdecl__)) strdup (const char *);
-
-
-char *__attribute__((__cdecl__)) _strdup_r (struct _reent *, const char *);
-
-
-char *__attribute__((__cdecl__)) strndup (const char *, size_t);
-
-
-
-char *__attribute__((__cdecl__)) _strndup_r (struct _reent *, const char *, size_t);
-# 106 "/usr/include/string.h" 3 4
-int __attribute__((__cdecl__)) strerror_r (int, char *, size_t)
-
-             __asm__ ("" "__xpg_strerror_r")
-
-  ;
-
-
-
-
-
-
-
-char * __attribute__((__cdecl__)) _strerror_r (struct _reent *, int, int, int *);
-
-
-size_t __attribute__((__cdecl__)) strlcat (char *, const char *, size_t);
-size_t __attribute__((__cdecl__)) strlcpy (char *, const char *, size_t);
-
-
-int __attribute__((__cdecl__)) strncasecmp (const char *, const char *, size_t);
-
-
-
-size_t __attribute__((__cdecl__)) strnlen (const char *, size_t);
-
-
-char *__attribute__((__cdecl__)) strsep (char **, const char *);
-
-
-
-
-
-
-
-char *__attribute__((__cdecl__)) strlwr (char *);
-char *__attribute__((__cdecl__)) strupr (char *);
-
-
-
-char *__attribute__((__cdecl__)) strsignal (int __signo);
-
-
-
-int __attribute__((__cdecl__)) strtosigno (const char *__name);
-# 182 "/usr/include/string.h" 3 4
-# 1 "/usr/include/sys/string.h" 1 3 4
-# 183 "/usr/include/string.h" 2 3 4
-
-
-# 34 "fuzzfis.h" 2
-# 53 "fuzzfis.h"
+# 48 "fuzzfis.h"
 typedef float fuzz_real_t;
 typedef enum{trimf=0, trapmf=1, gaussmf=2, sigmf=3, zmf=4, smf=5, gbellmf=6, singletonmf=7}fuzz_mf_t;
 typedef enum{Mamdani=0, Sugeno=1}fuzz_fis_type_t;
@@ -1927,10 +1799,12 @@ typedef unsigned char fuzz_output_t;
 typedef unsigned char fuzz_var_t;
 typedef int fuzz_rules_t;
 
+typedef fuzz_real_t (*SugenoFcn)(fuzz_real_t*);
 typedef fuzz_real_t (*FuzzMethod)(fuzz_real_t, fuzz_real_t);
 
 typedef struct{
     fuzz_real_t xmin, xmax;
+    fuzz_real_t value;
 }FuzzIO_t;
 
 
@@ -1940,6 +1814,7 @@ typedef struct{
     unsigned char ioindex;
     unsigned char tag;
     fuzz_mf_t shape;
+    SugenoFcn g;
     fuzz_real_t points[4];
     fuzz_real_t fuzzval;
 }FuzzMF_t;
@@ -1956,7 +1831,7 @@ typedef struct{
     unsigned char noutputs;
     unsigned char nmfinputs;
     unsigned char nmfoutputs;
-    fuzz_real_t res;
+    unsigned int evalpoints;
     FuzzMethod FuzzAND,FuzzOR;
 }FuzzFIS_t;
 
@@ -1967,21 +1842,22 @@ fuzz_real_t FuzzProbOR(fuzz_real_t a, fuzz_real_t b);
 fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points);
 
 
-void FuzzFisSetup(FuzzFIS_t *obj, fuzz_fis_type_t type, fuzz_real_t universe_resolution,
+void FuzzFisSetup(FuzzFIS_t *obj, fuzz_fis_type_t type, unsigned int evalpoints,
                   FuzzMethod AND_Method, FuzzMethod OR_Method,
                   FuzzIO_t *inputs, unsigned char nins, FuzzIO_t *outputs, unsigned char nouts,
                   FuzzMF_t *mfinputs, unsigned char nmfins, FuzzMF_t *mfoutputs, unsigned char nmfouts);
 
-void FuzzFuzz(FuzzFIS_t *obj, fuzz_real_t *inputs);
+void FuzzFuzz(FuzzFIS_t *obj);
 
 int FuzzyIS(FuzzFIS_t *obj, const short *rules, unsigned char n);
 void FuzzAddIO(FuzzIO_t *iovar, unsigned char tag, fuzz_real_t umin, fuzz_real_t umax);
 void FuzzAddMF(FuzzMF_t *mfvar, unsigned char iotag, unsigned char mftag, fuzz_mf_t shape, fuzz_real_t a, fuzz_real_t b, fuzz_real_t c, fuzz_real_t d);
+void FuzzAddOutputFunction(FuzzMF_t *mfvar, unsigned char iotag, unsigned char mftag, SugenoFcn fcn);
 fuzz_real_t ParseFuzzValue(FuzzMF_t *mfio, short index);
 
 
 
-fuzz_real_t FuzzDeFuzz(FuzzFIS_t *obj, unsigned char tag);
+int FuzzDeFuzz(FuzzFIS_t *obj);
 # 4 "main.c" 2
 
 FuzzFIS_t controller;
@@ -1996,26 +1872,25 @@ enum {eNegative, eZero, ePositive, dNegative, dZero, dPositive} ;
 enum {uNegative, uZero, uPositive, vNegative, vZero, vPositive} ;
 
 short rules[][(2*(sizeof(controllerinputs)/sizeof(controllerinputs[0])))+(((sizeof(controllerinputs)/sizeof(controllerinputs[0])))-1)+(3*(sizeof(controlleroutputs)/sizeof(controlleroutputs[0])))] = {
-                                                            { error ,( eNegative +1),(-0x7FFE), de ,( dNegative +1),(-0x7FFC), ut ,( uNegative +1),(-0x7FFE), vt ,( uNegative +1)},
-                                                            { error ,( eZero +1),(-0x7FFE), de ,( dNegative +1),(-0x7FFC), ut ,( uNegative +1),(-0x7FFE), vt ,( uPositive +1)},
-                                                            { error ,( ePositive +1),(-0x7FFE), de ,( dNegative +1),(-0x7FFC), ut ,( uZero +1)},
-                                                            { error ,( eNegative +1),(-0x7FFE), de ,( dZero +1),(-0x7FFC), ut ,( uNegative +1)},
-                                                            { error ,( eZero +1),(-0x7FFE), de ,( dZero +1),(-0x7FFC), ut ,( uZero +1)},
-                                                            { error ,( ePositive +1),(-0x7FFE), de ,( dZero +1),(-0x7FFC), ut ,( uPositive +1)},
-                                                            { error ,( eNegative +1),(-0x7FFE), de ,( dPositive +1),(-0x7FFC), ut ,( uZero +1)},
-                                                            { error ,( eZero +1),(-0x7FFE), de ,( dPositive +1),(-0x7FFC), ut ,( uPositive +1)},
-                                                            { error ,( ePositive +1),(-0x7FFE), de ,( dPositive +1),(-0x7FFC), ut ,( uPositive +1)},
+                                                            { error ,( eNegative +1),(-0x7FFE), de ,( dNegative +1),(-0x7FFC), ut ,( uNegative +1),(-0x7FFE), vt ,( vPositive +1) },
+                                                            { error ,( eZero +1),(-0x7FFE), de ,( dNegative +1),(-0x7FFC), ut ,( uNegative +1),(-0x7FFE), vt ,( vPositive +1) },
+                                                            { error ,( ePositive +1),(-0x7FFE), de ,( dNegative +1),(-0x7FFC), ut ,( uZero +1),(-0x7FFE), vt ,( vZero +1)},
+                                                            { error ,( eNegative +1),(-0x7FFE), de ,( dZero +1),(-0x7FFC), ut ,( uNegative +1),(-0x7FFE), vt ,( vPositive +1)},
+                                                            { error ,( eZero +1),(-0x7FFE), de ,( dZero +1),(-0x7FFC), ut ,( uZero +1),(-0x7FFE), vt ,( vZero +1)},
+                                                            { error ,( ePositive +1),(-0x7FFE), de ,( dZero +1),(-0x7FFC), ut ,( uPositive +1),(-0x7FFE), vt ,( vNegative +1)},
+                                                            { error ,( eNegative +1),(-0x7FFE), de ,( dPositive +1),(-0x7FFC), ut ,( uZero +1),(-0x7FFE), vt ,( vZero +1)},
+                                                            { error ,( eZero +1),(-0x7FFE), de ,( dPositive +1),(-0x7FFC), ut ,( uPositive +1),(-0x7FFE), vt ,( vNegative +1)},
+                                                            { error ,( ePositive +1),(-0x7FFE), de ,( dPositive +1),(-0x7FFC), ut ,( uPositive +1),(-0x7FFE), vt ,( vNegative +1)},
                                                             };
 
 int main(void) {
-    fuzz_real_t crisp_inputs[]={-0.25, 0.1};
-    fuzz_real_t crisp_outputs[] = {0,0};
 
     FuzzAddIO(controllerinputs, error, -2.0, 2.0 );
     FuzzAddIO(controllerinputs, de, -2.0, 2.0 );
 
     FuzzAddIO(controlleroutputs, ut, -2.0, 2.0 );
-    FuzzAddIO(controlleroutputs, vt, -2.0, 2.0 );
+    FuzzAddIO(controlleroutputs, vt, -1.0, 1.0 );
+
 
     FuzzAddMF(MFin, error , eNegative, trimf, -2.0 , -1.0 , 0.0,(0.0));
     FuzzAddMF(MFin, error , eZero, trimf, -1.0 , 0.0 , 1.0, (0.0));
@@ -2024,21 +1899,25 @@ int main(void) {
     FuzzAddMF(MFin, de , dZero, trimf, -1.0 , 0.0 , 1.0, (0.0));
     FuzzAddMF(MFin, de , dPositive, trimf, 0.0 , 1.0 , 2.0, (0.0));
 
+
     FuzzAddMF(MFout, ut , uNegative, trimf, -2 , -1 , 0,(0.0));
     FuzzAddMF(MFout, ut , uZero, trimf, -1 , 0 , 1, (0.0));
     FuzzAddMF(MFout, ut , uPositive, trimf, 0 , 1 , 2, (0.0));
 
-    FuzzAddMF(MFout, vt , vNegative, trimf, -2 , -1 , 0,(0.0));
-    FuzzAddMF(MFout, vt , vZero, trimf, -1 , 0 , 1, (0.0));
-    FuzzAddMF(MFout, vt , vPositive, trimf, 0 , 1 , 2, (0.0));
+    FuzzAddMF(MFout, vt , vNegative, trimf, -1 , -0.5 , 0,(0.0));
+    FuzzAddMF(MFout, vt , vZero, trimf, -0.5 , 0 , 0.5, (0.0));
+    FuzzAddMF(MFout, vt , vPositive, trimf, 0 , 0.5 , 1, (0.0));
 
-    FuzzFisSetup(&controller, Mamdani, 0.01, FuzzMin, FuzzMax, controllerinputs, sizeof(controllerinputs)/sizeof(controllerinputs[0]), controlleroutputs, sizeof(controlleroutputs)/sizeof(controlleroutputs[0]), MFin, sizeof(MFin)/sizeof(MFin[0]), MFout, sizeof(MFout)/sizeof(MFout[0]) );
-    FuzzFuzz(&controller, crisp_inputs );
+    FuzzFisSetup(&controller, Mamdani, 100, FuzzMin, FuzzMax, controllerinputs, sizeof(controllerinputs)/sizeof(controllerinputs[0]), controlleroutputs, sizeof(controlleroutputs)/sizeof(controlleroutputs[0]), MFin, sizeof(MFin)/sizeof(MFin[0]), MFout, sizeof(MFout)/sizeof(MFout[0]) );
+
+    controllerinputs[error].value = -0.25;
+    controllerinputs[de].value = 0.1;
+    FuzzFuzz(&controller);
     if ( FuzzyIS(&controller, &rules[0][0], sizeof(rules)/sizeof(rules[0]) ) == -1){
         perror("Error evaluatig rules");
     }
-    crisp_outputs[ut] = FuzzDeFuzz(&controller, ut);
-    crisp_outputs[vt] = FuzzDeFuzz(&controller, vt);
-    printf("\r\n ut=%g  vt=%g",crisp_outputs[ut],crisp_outputs[vt]);
+    FuzzDeFuzz(&controller);
+
+    printf("\r\n ut=%g  vt=%g",controlleroutputs[ut].value, controlleroutputs[vt].value);
     return (0);
 }

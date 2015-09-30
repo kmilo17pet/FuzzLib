@@ -1,6 +1,6 @@
 /*******************************************************************************
- *	FuzzFIS - A C-ANSI Library for Fuzzy Inference System for embedded devices
- *      Version : 1.6
+ *	FuzzFIS - A C-ANSI Library for Fuzzy Inference Systems on embedded devices
+ *      Version : 1.8
  *	Copyright (C) 2011 Eng. Juan Camilo Gomez C. MSc. (kmilo17pet@gmail.com)
  *      
  *	FuzzFIS is free software: you can redistribute it and/or modify it
@@ -30,11 +30,7 @@ extern "C" {
 #endif
 
 #include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-    
-#define FUZZ_DEFAULT_RES    (0.01)    
+  
 #define FUZZ_IGN            (0.0)    
 
 #define _FUZZ_AND_          (-0x7FFE)
@@ -48,7 +44,6 @@ extern "C" {
 #define     IS              ,(   
 #define     ISNOT           ,-(
 #define     END             +1)
-#define     FIS_RULES(_VAR_)   int _VAR_[FUZZ_MAX_NOF_RULES][FUZZ_MAX_RULES_ANT_CONSC]
 
 typedef float  fuzz_real_t;
 typedef enum{trimf=0, trapmf=1, gaussmf=2, sigmf=3, zmf=4, smf=5, gbellmf=6, singletonmf=7}fuzz_mf_t;
@@ -58,10 +53,12 @@ typedef unsigned char fuzz_output_t;
 typedef unsigned char fuzz_var_t;
 typedef int fuzz_rules_t;
 
+typedef fuzz_real_t (*SugenoFcn)(fuzz_real_t*);
 typedef fuzz_real_t (*FuzzMethod)(fuzz_real_t, fuzz_real_t); 
 
 typedef struct{
     fuzz_real_t xmin, xmax;    
+    fuzz_real_t value;
 }FuzzIO_t;
 
 #define __fuzzlength(_X_) (sizeof(_X_)/sizeof(_X_[0]))
@@ -71,6 +68,7 @@ typedef struct{
     unsigned char ioindex;
     unsigned char tag;
     fuzz_mf_t   shape;
+    SugenoFcn g;
     fuzz_real_t points[4];
     fuzz_real_t fuzzval;
 }FuzzMF_t;
@@ -87,7 +85,7 @@ typedef struct{
     unsigned char noutputs;
     unsigned char nmfinputs;
     unsigned char nmfoutputs;
-    fuzz_real_t  res;
+    unsigned int  evalpoints;
     FuzzMethod FuzzAND,FuzzOR;
 }FuzzFIS_t;    
 
@@ -97,23 +95,23 @@ fuzz_real_t FuzzProd(fuzz_real_t a, fuzz_real_t b);
 fuzz_real_t FuzzProbOR(fuzz_real_t a, fuzz_real_t b);
 fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points);
 
-#define FuzzSetupFIS(OBJ, TYPE, UNIVERSE_RES, AND_METHOD, OR_METHOD, FINPUTS, FOUTPUTS, MF_INPUTS, MF_OUTPUS)  FuzzFisSetup(&OBJ, TYPE, UNIVERSE_RES, AND_METHOD, OR_METHOD, FINPUTS, sizeof(FINPUTS)/sizeof(FINPUTS[0]), FOUTPUTS, sizeof(FOUTPUTS)/sizeof(FOUTPUTS[0]), MF_INPUTS, sizeof(MF_INPUTS)/sizeof(MF_INPUTS[0]), MF_OUTPUS, sizeof(MF_OUTPUS)/sizeof(MF_OUTPUS[0]) )
-void FuzzFisSetup(FuzzFIS_t *obj, fuzz_fis_type_t type, fuzz_real_t universe_resolution, 
+#define FuzzSetupFIS(OBJ, TYPE, AND_METHOD, OR_METHOD, FINPUTS, FOUTPUTS, MF_INPUTS, MF_OUTPUS)  FuzzFisSetup(&OBJ, TYPE, 100, AND_METHOD, OR_METHOD, FINPUTS, sizeof(FINPUTS)/sizeof(FINPUTS[0]), FOUTPUTS, sizeof(FOUTPUTS)/sizeof(FOUTPUTS[0]), MF_INPUTS, sizeof(MF_INPUTS)/sizeof(MF_INPUTS[0]), MF_OUTPUS, sizeof(MF_OUTPUS)/sizeof(MF_OUTPUS[0]) )
+void FuzzFisSetup(FuzzFIS_t *obj, fuzz_fis_type_t type, unsigned int evalpoints, 
                   FuzzMethod AND_Method, FuzzMethod OR_Method, 
                   FuzzIO_t *inputs, unsigned char nins, FuzzIO_t *outputs, unsigned char nouts,
                   FuzzMF_t *mfinputs, unsigned char nmfins, FuzzMF_t *mfoutputs, unsigned char nmfouts);
-#define FuzzFuzzification(OBJ, REAL_INPUTS)      FuzzFuzz(&OBJ, REAL_INPUTS )                     
-void FuzzFuzz(FuzzFIS_t *obj, fuzz_real_t *inputs);
+#define FuzzFuzzification(OBJ)      FuzzFuzz(&OBJ)                     
+void FuzzFuzz(FuzzFIS_t *obj);
 #define FuzzInference(OBJ, FRULES)      FuzzyIS(&OBJ, &FRULES[0][0], sizeof(FRULES)/sizeof(FRULES[0]) )
 int FuzzyIS(FuzzFIS_t *obj,  const short *rules, unsigned char n);
 void FuzzAddIO(FuzzIO_t *iovar, unsigned char tag, fuzz_real_t umin, fuzz_real_t umax);
 void FuzzAddMF(FuzzMF_t *mfvar, unsigned char iotag, unsigned char mftag, fuzz_mf_t shape, fuzz_real_t a, fuzz_real_t b, fuzz_real_t c, fuzz_real_t d);
+void FuzzAddOutputFunction(FuzzMF_t *mfvar, unsigned char iotag, unsigned char mftag, SugenoFcn fcn);
 fuzz_real_t ParseFuzzValue(FuzzMF_t *mfio, short index);
 
 
-#define FuzzDeFuzzification(OBJ, TAG)      FuzzDeFuzz(&OBJ, TAG)  
-fuzz_real_t FuzzDeFuzz(FuzzFIS_t *obj, unsigned char tag);
-
+#define FuzzDeFuzzification(OBJ)      FuzzDeFuzz(&OBJ)  
+int FuzzDeFuzz(FuzzFIS_t *obj);
 #ifdef	__cplusplus
 }
 #endif

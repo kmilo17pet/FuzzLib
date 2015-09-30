@@ -1,12 +1,12 @@
 #include "fuzzfis.h"
 
 /*=========================================================================================================================================*/
-void FuzzFisSetup(FuzzFIS_t *obj, fuzz_fis_type_t type, fuzz_real_t universe_resolution, 
+void FuzzFisSetup(FuzzFIS_t *obj, fuzz_fis_type_t type, unsigned int evalpoints, 
                   FuzzMethod AND_Method, FuzzMethod OR_Method, 
                   FuzzIO_t *inputs, unsigned char nins, FuzzIO_t *outputs, unsigned char nouts,
                   FuzzMF_t *mfinputs, unsigned char nmfins, FuzzMF_t *mfoutputs, unsigned char nmfouts){
     obj->type = type;
-    obj->res = universe_resolution;
+    obj->evalpoints = evalpoints;
     obj->ninputs = nins;
     obj->noutputs = nouts;
     obj->nmfinputs = nmfins;
@@ -30,20 +30,26 @@ void FuzzAddMF(FuzzMF_t *mfvar, unsigned char iotag, unsigned char mftag, fuzz_m
     mfvar[mftag].fuzzval = 0.0;
 }
 /*=========================================================================================================================================*/
+void FuzzAddOutputFunction(FuzzMF_t *mfvar, unsigned char iotag, unsigned char mftag, SugenoFcn fcn){
+    mfvar[mftag].g = fcn;
+    mfvar[mftag].ioindex = iotag;
+    mfvar[mftag].fuzzval = 0.0;
+}
+/*=========================================================================================================================================*/
 void FuzzAddIO(FuzzIO_t *iovar, unsigned char tag, fuzz_real_t umin, fuzz_real_t umax){
     iovar[tag].xmin = umin;
     iovar[tag].xmax = umax;   
 }
 /*=========================================================================================================================================*/
-void FuzzFuzz(FuzzFIS_t *obj, fuzz_real_t *inputs){
+void FuzzFuzz(FuzzFIS_t *obj){
     unsigned char i;
     for(i=0;i<obj->ninputs;i++){
-        if(inputs[i] > obj->input[i].xmax) inputs[i] = obj->input[i].xmax;
-        if(inputs[i] < obj->input[i].xmin) inputs[i] = obj->input[i].xmin;
+        if(obj->input[i].value > obj->input[i].xmax) obj->input[i].value = obj->input[i].xmax;
+        if(obj->input[i].value < obj->input[i].xmin) obj->input[i].value = obj->input[i].xmin;
     }
     for(i=0;i<obj->nmfinputs;i++){
         obj->inputmf[i].fuzzval = __fuzz_mf( obj->inputmf[i].shape,  
-                                             inputs[ obj->inputmf[i].ioindex ],
+                                             obj->input[ obj->inputmf[i].ioindex ].value,
                                              obj->inputmf[i].points);
     }
 }
@@ -112,19 +118,19 @@ int FuzzyIS(FuzzFIS_t *obj,  const short *rules, unsigned char n){
             }
             else if (RULESTATE==_CONSECUENT_OUT_){ //implication min
                 output_index = rules[index];
-                mfoutput_index = rules[index+1];
-                //printf("\r\n outindex %d",mfoutput_index);
+                mfoutput_index = rules[index+1]-1;
                 conector = (obj->noutputs>1)? rules[index+2] : -1;
                 j+=2;
                 switch(obj->type){
                     case Mamdani:
-                         obj->outputmf[mfoutput_index].fuzzval = FuzzMax(obj->outputmf[mfoutput_index].fuzzval, rule_strength); //agreggation using max
+                        obj->outputmf[mfoutput_index].fuzzval = FuzzMax(obj->outputmf[mfoutput_index].fuzzval, rule_strength); //agreggation using max
                         break;
                     case Sugeno:
+                        //obj->outputmf[mfoutput_index].fuzzval = obj->outputmf[mfoutput_index]
                         break;
                     default: return -1;
                 }
-                //printf("\r\n strength %g Cr:%d %d",rule_strength,output_index, mfoutput_index);
+                //printf("\r\n strength %g Cr:%d mfoutindex:%d",rule_strength,output_index, mfoutput_index);
                 if(conector != _FUZZ_AND_ ) break;     
             }       
         }
@@ -132,35 +138,33 @@ int FuzzyIS(FuzzFIS_t *obj,  const short *rules, unsigned char n){
     return 0;
 }
 /*=========================================================================================================================================*/
-fuzz_real_t FuzzDeFuzz(FuzzFIS_t *obj, unsigned char tag){
-    int i,j,n;
-    fuzz_real_t y;
+int FuzzDeFuzz(FuzzFIS_t *obj){
+    int i,j;
     fuzz_real_t x;
     fuzz_real_t z;
-    fuzz_real_t outfuzzval;
     fuzz_real_t fx;
-    fuzz_real_t maxval;
     fuzz_real_t intfx,intxfx;
-    intfx=intxfx=maxval=0.0;
-    
-    for(i=0;i<obj->nmfoutputs;i++)  maxval =  FuzzMax(obj->outputmf[i].fuzzval, maxval);
-    n = ((obj->output[tag].xmax - obj->output[tag].xmin)/obj->res)+1;
-    for(i=0;i<n;i++){
-        x = obj->output[tag].xmin + (i*obj->res);
-        if(x > obj->output[tag].xmax) x = obj->output[tag].xmax;
-        fx = 0.0;
-        for(j=0;j<obj->nmfoutputs;j++){
-            if(obj->outputmf[j].ioindex == tag){
-                z = __fuzz_mf( obj->outputmf[j].shape, x , obj->outputmf[j].points);
-                outfuzzval = obj->outputmf[j].fuzzval;
-                fx = FuzzMax( fx,  (z>outfuzzval)? outfuzzval : z );
-            }            
+    fuzz_real_t res;
+    unsigned char tag;
+    for(tag=0;tag<obj->noutputs;tag++){
+        intfx=intxfx=0.0; 
+        res = ((obj->output[tag].xmax - obj->output[tag].xmin)/obj->evalpoints);
+        for(i=0;i<obj->evalpoints+1;i++){
+            x = obj->output[tag].xmin + (i*res);
+            if(x > obj->output[tag].xmax) x = obj->output[tag].xmax;
+            fx = 0.0;
+            for(j=0;j<obj->nmfoutputs;j++){
+                if(obj->outputmf[j].ioindex == tag){
+                    z = __fuzz_mf( obj->outputmf[j].shape, x , obj->outputmf[j].points);
+                    fx = FuzzMax( fx,  (z>obj->outputmf[j].fuzzval)? obj->outputmf[j].fuzzval : z );
+                }            
+            }
+            intxfx+=x*fx;
+            intfx+=fx;
+            if(x >= obj->output[tag].xmax) break;
         }
-        intxfx+=x*fx;
-        intfx+=fx;
-        if(x >= obj->output[tag].xmax) break;
+        obj->output[tag].value = (intxfx/intfx);
     }
-    return (fuzz_real_t)(intxfx/intfx);
 }
 /*=========================================================================================================================================*/
 fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
@@ -168,13 +172,15 @@ fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
     fuzz_real_t b = points[1];
     fuzz_real_t c = points[2];
     fuzz_real_t d = points[3];
+    fuzz_real_t temp;
     switch(mf){
         case trimf:
             return FuzzMax( FuzzMin( (x-a)/(b-a)  , (c-x)/(c-b) ) , 0.0 );
         case trapmf:
             return FuzzMax( FuzzMin( FuzzMin(  (x-a)/(b-a) , 1  ) , (d-x)/(d-c) ) , 0.0 );
         case gaussmf:
-            return exp( -0.5*pow( (x-b)/a , 2 ) );
+            temp = (x-b)/a; 
+            return exp( -0.5*temp*temp );
         case sigmf:
             return ( 1.0/( 1.0 + exp(-a*(x-c)) ) );
         case zmf:
@@ -185,8 +191,14 @@ fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
             return 0.0;
         case smf:
             if (x<=a)                   return 0.0;
-            if (x>=a && x<=((a+b)/2))   return (2.0*pow( (x-a)/(b-a) , 2 ));
-            if (x<=b && x>=((a+b)/2))   return (1.0 - (2.0*pow( (x-b)/(b-a) , 2 )));
+            if (x>=a && x<=((a+b)/2)){
+                temp = (x-a)/(b-a); 
+                return (2.0*temp*temp);
+            }
+            if (x<=b && x>=((a+b)/2)){
+                temp = (x-b)/(b-a); 
+                return (1.0 - (2.0*temp*temp));
+            }
             if (x>=b)                   return 1.0;
             return 0.0;
         case gbellmf:
