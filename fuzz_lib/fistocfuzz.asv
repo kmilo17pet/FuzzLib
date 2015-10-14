@@ -1,0 +1,194 @@
+function varargout=fistocfuzz(fis)
+    nextline = char([10]); %#ok
+    tabchar = char([9]); %#ok
+    objname = fix2varname(fis.name);
+    code = ['#include <stdio.h>' nextline '#include <stdlib.h>' nextline '#include "fuzzfis.h"' nextline nextline];
+    
+    if(strcmp(fis.defuzzMethod,'cen'))
+    fistype = 'Sugeno';  
+    if (strcmp(fis.type,'mandani'))
+        fistype = 'Mamdani';
+    end
+    andmethod = 'FuzzMin';
+    ormethod = 'FuzzMax';
+    switch(fis.andMethod)
+        case 'min'
+            andmethod = 'FuzzMin';
+        case 'prod'
+            andmethod = 'FuzzProd';
+        otherwise
+    end
+    switch(fis.orMethod)
+        case 'max'
+            ormethod = 'FuzzMax';
+        case 'probor'
+            ormethod = 'FuzzProbOR';
+        otherwise
+    end
+    nins = length(fis.input);
+    nouts = length(fis.output);
+    code = [code '/* FIS Object */' nextline];
+    code = [code 'FuzzFIS_t ' objname ';' nextline];
+    code = [code '/* I/O Fuzzy Objects */' nextline];
+    fuzzin_arrname = [objname '_inputs'];
+    fuzzout_arrname = [objname '_outputs'];
+    code = [ code 'FuzzIO_t ' fuzzin_arrname '[' num2str(nins) '];' nextline];
+    code = [ code 'FuzzIO_t ' fuzzout_arrname '[' num2str(nouts) '];' nextline];
+    nin_mfs = length([fis.input(:).mf]);
+    nout_mfs = length([fis.output(:).mf]);
+    code = [code '/* I/O Membership Objects */' nextline];
+    code = [ code 'FuzzMF_t MFin[' num2str(nin_mfs) '];' nextline];
+    code = [ code 'FuzzMF_t MFout[' num2str(nout_mfs) '];' nextline];
+    code = [code '/*  Input Labels */' nextline];
+    code = [ code 'enum { '];
+    for k=1:length(fis.input)
+        innames{k}=fix2varname(fis.input(k).name);%#ok
+        code = [ code innames{k} ', '];%#ok
+    end
+    code(end-1)=[];
+    code = [ code '};' nextline];
+    code = [code '/* Output Labels */' nextline];
+    code = [ code 'enum { '];
+    for k=1:length(fis.output)
+        outnames{k} = fix2varname(fis.output(k).name);%#ok
+        code = [ code outnames{k} ', '];%#ok
+    end
+    code(end-1)=[];
+    code = [ code '};' nextline];
+    
+    
+     
+    
+    mfinnames={};
+    for k=1:nins
+        mfinnames = [mfinnames strcat(innames{k},{fis.input(k).mf(:).name}) ]; %#ok
+        mfins{k} = strcat(innames{k},{fis.input(k).mf(:).name});
+    end
+    mfoutnames={};
+    for k=1:nouts
+        mfoutnames = [mfoutnames strcat(outnames{k},{fis.output(k).mf(:).name}) ];%#ok
+        mfouts{k} = strcat(outnames{k},{fis.output(k).mf(:).name});
+    end
+
+    code = [ code 'enum { '];
+    for k=1:length(mfinnames)
+        mfinnames{k} = fix2varname(mfinnames{k});%#ok
+        code = [ code mfinnames{k} ', '];%#ok
+    end
+    code(end-1)=[];
+    code = [ code '};' nextline];
+
+    code = [ code 'enum { '];
+    for k=1:length(mfoutnames)
+        mfoutnames{k} = fix2varname(mfoutnames{k});%#ok
+        code = [ code mfoutnames{k} ', '];%#ok
+    end
+    code(end-1)=[];
+    code = [ code '};' nextline nextline];
+    
+    code = [code 'FuzzDefRules(' objname '_Rules,' objname '_inputs,' objname '_outputs) =  { ' nextline];
+    nrules = length(fis.rule);
+    conn = {' AND ',' OR ', ' THEN ', ' END },'};
+    for k=1:nrules
+        code = [code tabchar '{ IF ' ];
+        for l=1:nins
+            mfindex= fis.rule(k).antecedent(l);
+            connection = fis.rule(k).connection;
+            if(l==nins), connection=3; end
+            if mfindex~=0
+                if mfindex<0, neg = ' ISNOT ';
+                else,      neg = ' IS '; 
+                end
+                code = [code innames{l} neg  mfins{l}{abs(mfindex)}  conn{connection}];
+            end
+        end
+        
+        for l=1:nouts
+            mfindex= fis.rule(k).consequent(l);
+            connection = 1;
+            if(l==nouts), connection=4; end
+            if mfindex~=0
+                if mfindex<0, neg = ' ISNOT ';
+                else,      neg = ' IS '; 
+                end
+                code = [code outnames{l} neg  mfouts{l}{abs(mfindex)}  conn{connection}];
+            end
+        end
+        code = [code nextline];
+    end
+    
+      
+    code = [code '};' nextline nextline 'int main(int argc, char** argv) {' nextline];
+    code = [code tabchar '/* Add inputs */' nextline];
+    for k=1:nins
+        code = [code tabchar 'FuzzAddIO( ' fuzzin_arrname ', '  innames{k} ', ' num2str(fis.input(k).range(1)) ', '  num2str(fis.input(k).range(2)) ' );' nextline];
+    end 
+       
+    for k=1:nouts
+        code = [code tabchar 'FuzzAddIO( ' fuzzout_arrname ', '  outnames{k} ', ' num2str(fis.output(k).range(1)) ', '  num2str(fis.output(k).range(2)) ' );' nextline];
+    end 
+    code = [code tabchar '/* Add membership functions to the inputs */' nextline]; 
+        
+    for k=1:nins
+    	for l=1:length(fis.input(k).mf)
+            params = [NaN NaN NaN NaN];
+            fp = fis.input(k).mf(l).params;
+            params(1:length(fp)) = fp;
+            strp = mat2str(params);
+            strp(strp=='[' | strp==']')='';
+            strp = strrep(strp, ' ', ' ,');
+            strp = strrep(strp, 'NaN', 'FUZZ_IGN');
+            code = [code tabchar 'FuzzAddMF( MFin, ' innames{k} , ', ' mfins{k}{l} ', ' fis.input(k).mf(l).type ', ' strp ' );' nextline];
+            
+        end
+    end
+    code = [code tabchar '/* Add membership functions to the outputs */' nextline]; 
+   
+    for k=1:nouts
+    	for l=1:length(fis.output(k).mf)
+            params = [NaN NaN NaN NaN];
+            fp = fis.output(k).mf(l).params;
+            params(1:length(fp)) = fp;
+            strp = mat2str(params);
+            strp(strp=='[' | strp==']')='';
+            strp = strrep(strp, ' ', ' ,');
+            strp = strrep(strp, 'NaN', 'FUZZ_IGN');
+            code = [code tabchar 'FuzzAddMF( MFin, ' outnames{k} , ', ' mfouts{k}{l} ', ' fis.output(k).mf(l).type ', ' strp ' );' nextline];
+        end
+    end
+    code = [code nextline tabchar '/* Configure de Inference System */' nextline tabchar 'FuzzSetupFIS( ' objname ', ' fistype ', ' andmethod ', ' ormethod ', ' fuzzin_arrname ', ' fuzzout_arrname ', MFin, MFout );' nextline]; 
+    code = [code nextline tabchar '/* Set the crips inputs */' nextline];
+    for k=1:nins
+        code = [code tabchar '// ' fuzzin_arrname '[' innames{k} '].value = 0.0;' nextline];
+    end
+    code = [code nextline tabchar 'FuzzFuzzification( ', objname ' );' nextline];
+    code = [code tabchar 'if ( FuzzInference( ' objname ', '  objname '_Rules ) == -1){' nextline tabchar tabchar '/* Error! */' nextline tabchar '}' nextline];
+    code = [code tabchar 'FuzzDeFuzzification( ' objname ' );' nextline];
+    code = [code nextline tabchar '/* Get the crips outputs */' nextline];
+    for k=1:nouts
+        code = [code tabchar '// ' fuzzout_arrname '[' outnames{k} '].value;' nextline];
+    end
+    
+    code = [code nextline tabchar 'return (EXIT_SUCCESS);' nextline '}' nextline];
+    varargout = {code};
+    if(nargout<=0)
+        f=findobj('tag','fuzzlib_outfig');
+        if(isempty(f))
+            f=figure('name','Generated C-ANSI Code','resize','off','NumberTitle','off','menubar','none','position',[0 0 800 500],'visible','off','tag','fuzzlib_outfig');
+            movegui(f,'center');
+            ed=uicontrol('parent',f,'style','edit','fontsize',7.5,'fontname','consolas','position',[10 10 780 480],'max',2,'string',code,'HorizontalAlignment','left','tag','fuzzlib_outedt'); %#ok
+            set(f,'visible','on');        
+        end
+        ed=findobj('tag','fuzzlib_outedt');
+        set(ed,'string',code);
+        varargout = {};
+    end
+end
+
+
+function b = fix2varname(a)
+    a=a(find((a>=65 & a<=90) | (a>=97 & a<=122), 1,'first'):end);    
+    b = a( (a>=48 & a<=57) | (a>=65 & a<=90) | (a>=97 & a<=122) | a==32);
+    b(b==32)='_';
+    b=b(find(b>65,1,'first'):end);
+end

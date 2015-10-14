@@ -1,5 +1,5 @@
 # 1 "main.c"
-# 1 "/cygdrive/d/GDrive/Proyects/FuzzLib/fuzz_lib//"
+# 1 "/cygdrive/e/GDrive/Proyects/FuzzLib/fuzz_lib//"
 # 1 "<built-in>"
 # 1 "<command-line>"
 # 1 "main.c"
@@ -1792,7 +1792,7 @@ extern __attribute__((dllimport)) enum __fdlibm_version __fdlib_version;
 # 33 "fuzzfis.h" 2
 # 48 "fuzzfis.h"
 typedef float fuzz_real_t;
-typedef enum{trimf=0, trapmf=1, gaussmf=2, sigmf=3, zmf=4, smf=5, gbellmf=6, singletonmf=7}fuzz_mf_t;
+typedef enum{trimf, trapmf, gbellmf, gaussmf, gauss2mf, sigmf, dsigmf, psigmf, pimf, smf, zmf, singletonmf}fuzz_mf_t;
 typedef enum{Mamdani=0, Sugeno=1}fuzz_fis_type_t;
 typedef unsigned char fuzz_input_t;
 typedef unsigned char fuzz_output_t;
@@ -1860,64 +1860,85 @@ fuzz_real_t ParseFuzzValue(FuzzMF_t *mfio, short index);
 int FuzzDeFuzz(FuzzFIS_t *obj);
 # 4 "main.c" 2
 
-FuzzFIS_t controller;
-FuzzIO_t controllerinputs[2];
-FuzzIO_t controlleroutputs[2];
-FuzzMF_t MFin[6];
+
+FuzzFIS_t flexnav;
+
+FuzzIO_t flexnav_inputs[4];
+FuzzIO_t flexnav_outputs[2];
+
+FuzzMF_t MFin[12];
 FuzzMF_t MFout[6];
 
-enum {error, de};
-enum {ut,vt};
-enum {eNegative, eZero, ePositive, dNegative, dZero, dPositive} ;
-enum {uNegative, uZero, uPositive, vNegative, vZero, vPositive} ;
+enum { wt, dax, day, ae };
 
-short rules[][(2*(sizeof(controllerinputs)/sizeof(controllerinputs[0])))+(((sizeof(controllerinputs)/sizeof(controllerinputs[0])))-1)+(3*(sizeof(controlleroutputs)/sizeof(controlleroutputs[0])))] = {
-                                                            { error ,( eNegative +1),(-0x7FFE), de ,( dNegative +1),(-0x7FFC), ut ,( uNegative +1),(-0x7FFE), vt ,( vPositive +1) },
-                                                            { error ,( eZero +1),(-0x7FFE), de ,( dNegative +1),(-0x7FFC), ut ,( uNegative +1),(-0x7FFE), vt ,( vPositive +1) },
-                                                            { error ,( ePositive +1),(-0x7FFE), de ,( dNegative +1),(-0x7FFC), ut ,( uZero +1),(-0x7FFE), vt ,( vZero +1)},
-                                                            { error ,( eNegative +1),(-0x7FFE), de ,( dZero +1),(-0x7FFC), ut ,( uNegative +1),(-0x7FFE), vt ,( vPositive +1)},
-                                                            { error ,( eZero +1),(-0x7FFE), de ,( dZero +1),(-0x7FFC), ut ,( uZero +1),(-0x7FFE), vt ,( vZero +1)},
-                                                            { error ,( ePositive +1),(-0x7FFE), de ,( dZero +1),(-0x7FFC), ut ,( uPositive +1),(-0x7FFE), vt ,( vNegative +1)},
-                                                            { error ,( eNegative +1),(-0x7FFE), de ,( dPositive +1),(-0x7FFC), ut ,( uZero +1),(-0x7FFE), vt ,( vZero +1)},
-                                                            { error ,( eZero +1),(-0x7FFE), de ,( dPositive +1),(-0x7FFC), ut ,( uPositive +1),(-0x7FFE), vt ,( vNegative +1)},
-                                                            { error ,( ePositive +1),(-0x7FFE), de ,( dPositive +1),(-0x7FFC), ut ,( uPositive +1),(-0x7FFE), vt ,( vNegative +1)},
-                                                            };
+enum { phit, thetat };
+enum { wtSLOW, wtMED, wtFAST, daxLOW, daxMED, daxHIGH, dayLOW, dayMED, dayHIGH, aeLOW, aeMED, aeHIGH };
+enum { phitGYRO, phitBOTH, phitACCEL, thetatGYRO, thetatBOTH, thetatACCEL };
 
-int main(void) {
+short flexnav_Rules[][(2*(sizeof(flexnav_inputs)/sizeof(flexnav_inputs[0])))+(((sizeof(flexnav_inputs)/sizeof(flexnav_inputs[0])))-1)+(3*(sizeof(flexnav_outputs)/sizeof(flexnav_outputs[0])))] = {
+ { wt ,-( wtSLOW +1),(-0x7FFC), phit ,( phitGYRO +1),(-0x7FFE), thetat ,( thetatGYRO +1) },
+ { dax ,( daxHIGH +1),(-0x7FFC), thetat ,( thetatGYRO +1) },
+ { day ,( dayHIGH +1),(-0x7FFC), thetat ,( thetatGYRO +1) },
+ { ae ,( aeHIGH +1),(-0x7FFC), phit ,( phitGYRO +1),(-0x7FFE), thetat ,( thetatGYRO +1) },
+ { wt ,( wtSLOW +1),(-0x7FFE), dax ,( daxLOW +1),(-0x7FFE), ae ,( aeLOW +1),(-0x7FFC), phit ,( phitACCEL +1) },
+ { wt ,( wtSLOW +1),(-0x7FFE), day ,( dayLOW +1),(-0x7FFE), ae ,( aeLOW +1),(-0x7FFC), thetat ,( thetatACCEL +1) },
+ { wt ,( wtSLOW +1),(-0x7FFE), dax ,( daxLOW +1),(-0x7FFE), ae ,( aeMED +1),(-0x7FFC), phit ,( phitBOTH +1) },
+ { wt ,( wtSLOW +1),(-0x7FFE), day ,( dayLOW +1),(-0x7FFE), ae ,( aeMED +1),(-0x7FFC), thetat ,( thetatBOTH +1) },
+ { wt ,( wtSLOW +1),(-0x7FFE), dax ,( daxMED +1),(-0x7FFE), ae ,( aeLOW +1),(-0x7FFC), phit ,( phitBOTH +1) },
+ { wt ,( wtSLOW +1),(-0x7FFE), day ,( dayMED +1),(-0x7FFE), ae ,( aeLOW +1),(-0x7FFC), thetat ,( thetatBOTH +1) },
+ { wt ,( wtMED +1),(-0x7FFE), dax ,( daxLOW +1),(-0x7FFE), ae ,( aeLOW +1),(-0x7FFC), phit ,( phitBOTH +1) },
+ { wt ,( wtMED +1),(-0x7FFE), day ,( dayLOW +1),(-0x7FFE), ae ,( aeLOW +1),(-0x7FFC), thetat ,( thetatBOTH +1) },
+ { wt ,( wtMED +1),(-0x7FFE), dax ,-( daxLOW +1),(-0x7FFC), phit ,( phitGYRO +1) },
+ { wt ,( wtMED +1),(-0x7FFE), day ,-( dayLOW +1),(-0x7FFC), thetat ,( thetatGYRO +1) },
+ { wt ,( wtMED +1),(-0x7FFE), ae ,-( aeLOW +1),(-0x7FFC), phit ,( phitGYRO +1),(-0x7FFE), thetat ,( thetatGYRO +1) },
+};
 
-    FuzzAddIO(controllerinputs, error, -2.0, 2.0 );
-    FuzzAddIO(controllerinputs, de, -2.0, 2.0 );
+int main(int argc, char** argv) {
 
-    FuzzAddIO(controlleroutputs, ut, -2.0, 2.0 );
-    FuzzAddIO(controlleroutputs, vt, -1.0, 1.0 );
+ FuzzAddIO( flexnav_inputs, wt, 0, 0.5 );
+ FuzzAddIO( flexnav_inputs, dax, 0, 5 );
+ FuzzAddIO( flexnav_inputs, day, 0, 5 );
+ FuzzAddIO( flexnav_inputs, ae, 0, 20 );
+ FuzzAddIO( flexnav_outputs, phit, 0, 1 );
+ FuzzAddIO( flexnav_outputs, thetat, 0, 1 );
+
+ FuzzAddMF( MFin, wt, wtSLOW, trimf, -0.2 ,0 ,0.2 ,(0.0) );
+ FuzzAddMF( MFin, wt, wtMED, trimf, 0.1 ,0.25 ,0.4 ,(0.0) );
+ FuzzAddMF( MFin, wt, wtFAST, trimf, 0.3 ,0.5 ,0.7 ,(0.0) );
+ FuzzAddMF( MFin, dax, daxLOW, trimf, -1 ,0 ,2 ,(0.0) );
+ FuzzAddMF( MFin, dax, daxMED, trimf, 1 ,2.5 ,4 ,(0.0) );
+ FuzzAddMF( MFin, dax, daxHIGH, trimf, 3 ,5 ,7 ,(0.0) );
+ FuzzAddMF( MFin, day, dayLOW, trimf, -2 ,0 ,2 ,(0.0) );
+ FuzzAddMF( MFin, day, dayMED, trimf, 1 ,2.5 ,4 ,(0.0) );
+ FuzzAddMF( MFin, day, dayHIGH, trimf, 3 ,5 ,7 ,(0.0) );
+ FuzzAddMF( MFin, ae, aeLOW, trimf, -8 ,0 ,8 ,(0.0) );
+ FuzzAddMF( MFin, ae, aeMED, trimf, 5 ,10 ,15 ,(0.0) );
+ FuzzAddMF( MFin, ae, aeHIGH, trimf, 12 ,20 ,28 ,(0.0) );
+
+ FuzzAddMF( MFout, phit, phitGYRO, trimf, -0.4 ,0 ,0.4 ,(0.0) );
+ FuzzAddMF( MFout, phit, phitBOTH, trimf, 0.2 ,0.5 ,0.8 ,(0.0) );
+ FuzzAddMF( MFout, phit, phitACCEL, trimf, 0.6 ,1 ,1.4 ,(0.0) );
+ FuzzAddMF( MFout, thetat, thetatGYRO, trimf, -0.4 ,0 ,0.4 ,(0.0) );
+ FuzzAddMF( MFout, thetat, thetatBOTH, trimf, 0.2 ,0.5 ,0.8 ,(0.0) );
+ FuzzAddMF( MFout, thetat, thetatACCEL, trimf, 0.6 ,1 ,1.4 ,(0.0) );
 
 
-    FuzzAddMF(MFin, error , eNegative, trimf, -2.0 , -1.0 , 0.0,(0.0));
-    FuzzAddMF(MFin, error , eZero, trimf, -1.0 , 0.0 , 1.0, (0.0));
-    FuzzAddMF(MFin, error , ePositive, trimf, 0.0 , 1.0 , 2.0, (0.0));
-    FuzzAddMF(MFin, de , dNegative, trimf, -2.0 , -1.0 , 0.0, (0.0));
-    FuzzAddMF(MFin, de , dZero, trimf, -1.0 , 0.0 , 1.0, (0.0));
-    FuzzAddMF(MFin, de , dPositive, trimf, 0.0 , 1.0 , 2.0, (0.0));
+ FuzzFisSetup(&flexnav, Mamdani, 100, FuzzMin, FuzzMax, flexnav_inputs, sizeof(flexnav_inputs)/sizeof(flexnav_inputs[0]), flexnav_outputs, sizeof(flexnav_outputs)/sizeof(flexnav_outputs[0]), MFin, sizeof(MFin)/sizeof(MFin[0]), MFout, sizeof(MFout)/sizeof(MFout[0]) );
 
 
-    FuzzAddMF(MFout, ut , uNegative, trimf, -2 , -1 , 0,(0.0));
-    FuzzAddMF(MFout, ut , uZero, trimf, -1 , 0 , 1, (0.0));
-    FuzzAddMF(MFout, ut , uPositive, trimf, 0 , 1 , 2, (0.0));
+  flexnav_inputs[wt].value = 0.332;
+  flexnav_inputs[dax].value = 1.53;
+  flexnav_inputs[day].value = 3.5;
+  flexnav_inputs[ae].value = 6.36;
 
-    FuzzAddMF(MFout, vt , vNegative, trimf, -1 , -0.5 , 0,(0.0));
-    FuzzAddMF(MFout, vt , vZero, trimf, -0.5 , 0 , 0.5, (0.0));
-    FuzzAddMF(MFout, vt , vPositive, trimf, 0 , 0.5 , 1, (0.0));
+ FuzzFuzz(&flexnav);
+ if ( FuzzyIS(&flexnav, &flexnav_Rules[0][0], sizeof(flexnav_Rules)/sizeof(flexnav_Rules[0]) ) == -1){
 
-    FuzzFisSetup(&controller, Mamdani, 100, FuzzMin, FuzzMax, controllerinputs, sizeof(controllerinputs)/sizeof(controllerinputs[0]), controlleroutputs, sizeof(controlleroutputs)/sizeof(controlleroutputs[0]), MFin, sizeof(MFin)/sizeof(MFin[0]), MFout, sizeof(MFout)/sizeof(MFout[0]) );
+ }
+ FuzzDeFuzz(&flexnav);
 
-    controllerinputs[error].value = -0.25;
-    controllerinputs[de].value = 0.1;
-    FuzzFuzz(&controller);
-    if ( FuzzyIS(&controller, &rules[0][0], sizeof(rules)/sizeof(rules[0]) ) == -1){
-        perror("Error evaluatig rules");
-    }
-    FuzzDeFuzz(&controller);
 
-    printf("\r\n ut=%g  vt=%g",controlleroutputs[ut].value, controlleroutputs[vt].value);
-    return (0);
+ printf("\r\n %g   %g", flexnav_outputs[phit].value, flexnav_outputs[thetat].value);
+
+ return (0);
 }

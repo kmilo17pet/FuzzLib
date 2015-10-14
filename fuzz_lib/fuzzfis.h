@@ -46,7 +46,7 @@ extern "C" {
 #define     END             +1)
 
 typedef float  fuzz_real_t;
-typedef enum{trimf=0, trapmf=1, gaussmf=2, sigmf=3, zmf=4, smf=5, gbellmf=6, singletonmf=7}fuzz_mf_t;
+typedef enum{trimf, trapmf, gbellmf, gaussmf, gauss2mf, sigmf, dsigmf, psigmf, pimf, smf, zmf, singletonmf}fuzz_mf_t;
 typedef enum{Mamdani=0, Sugeno=1}fuzz_fis_type_t;
 typedef unsigned char fuzz_input_t;
 typedef unsigned char fuzz_output_t;

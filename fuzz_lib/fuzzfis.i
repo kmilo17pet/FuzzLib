@@ -1,5 +1,5 @@
 # 1 "fuzzfis.c"
-# 1 "/cygdrive/d/GDrive/Proyects/FuzzLib/fuzz_lib//"
+# 1 "/cygdrive/e/GDrive/Proyects/FuzzLib/fuzz_lib//"
 # 1 "<built-in>"
 # 1 "<command-line>"
 # 1 "fuzzfis.c"
@@ -702,7 +702,7 @@ extern __attribute__((dllimport)) enum __fdlibm_version __fdlib_version;
 # 33 "fuzzfis.h" 2
 # 48 "fuzzfis.h"
 typedef float fuzz_real_t;
-typedef enum{trimf=0, trapmf=1, gaussmf=2, sigmf=3, zmf=4, smf=5, gbellmf=6, singletonmf=7}fuzz_mf_t;
+typedef enum{trimf, trapmf, gbellmf, gaussmf, gauss2mf, sigmf, dsigmf, psigmf, pimf, smf, zmf, singletonmf}fuzz_mf_t;
 typedef enum{Mamdani=0, Sugeno=1}fuzz_fis_type_t;
 typedef unsigned char fuzz_input_t;
 typedef unsigned char fuzz_output_t;
@@ -821,6 +821,7 @@ void FuzzFuzz(FuzzFIS_t *obj){
         obj->inputmf[i].fuzzval = __fuzz_mf( obj->inputmf[i].shape,
                                              obj->input[ obj->inputmf[i].ioindex ].value,
                                              obj->inputmf[i].points);
+
     }
 }
 
@@ -938,28 +939,54 @@ int FuzzDeFuzz(FuzzFIS_t *obj){
 }
 
 fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
-    fuzz_real_t a = points[0];
-    fuzz_real_t b = points[1];
-    fuzz_real_t c = points[2];
-    fuzz_real_t d = points[3];
-    fuzz_real_t temp;
+    fuzz_real_t a,b,c,d;
+    fuzz_real_t temp,temp1,temp2;
     switch(mf){
         case trimf:
+            a = points[0];
+            b = points[1];
+            c = points[2];
             return FuzzMax( FuzzMin( (x-a)/(b-a) , (c-x)/(c-b) ) , 0.0 );
         case trapmf:
+            a = points[0];
+            b = points[1];
+            c = points[2];
+            d = points[3];
             return FuzzMax( FuzzMin( FuzzMin( (x-a)/(b-a) , 1 ) , (d-x)/(d-c) ) , 0.0 );
+        case gbellmf:
+            a = points[0];
+            b = points[1];
+            return ( 1.0/ (1.0 + pow( fabs( (x-c)/a ), 2*b ) ) );
         case gaussmf:
+            a = points[0];
+            b = points[1];
             temp = (x-b)/a;
             return exp( -0.5*temp*temp );
+        case gauss2mf:
+            a = points[0];
+            b = points[1];
+            c = points[2];
+            d = points[3];
+            temp1 = (x<=b);
+            temp2 = (x-b);
+            temp = exp((-temp2*temp2)/(2*a*a))*temp1 + (1-temp1);
+            temp1 = (x>=d);
+            temp2 = (x-d);
+            temp *= exp((-temp2*temp2)/(2*c*c))*temp1 + (1-temp1);
+            return temp;
         case sigmf:
-            return ( 1.0/( 1.0 + exp(-a*(x-c)) ) );
-        case zmf:
-            if (x<=a) return 1.0;
-            if (x>=a && x<=((a+b)/2)) return (1.0 - (2.0*pow( (x-a)/(b-a) , 2 )));
-            if (x<=b && x>=((a+b)/2)) return (2.0*pow( (x-b)/(b-a) , 2 ));
-            if (x>=b) return 0.0;
-            return 0.0;
+            a = points[0];
+            b = points[1];
+            return ( 1.0/( 1.0 + exp(-a*(x-b)) ) );
+        case dsigmf:
+            return fabs( __fuzz_mf(sigmf, x, points) - __fuzz_mf(sigmf, x, points+2) );
+        case psigmf:
+            return ( __fuzz_mf(sigmf, x, points) * __fuzz_mf(sigmf, x, points+2) );
+        case pimf:
+            return ( __fuzz_mf(smf, x, points) * __fuzz_mf( zmf, x, points+2) );
         case smf:
+            a = points[0];
+            b = points[1];
             if (x<=a) return 0.0;
             if (x>=a && x<=((a+b)/2)){
                 temp = (x-a)/(b-a);
@@ -971,9 +998,16 @@ fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
             }
             if (x>=b) return 1.0;
             return 0.0;
-        case gbellmf:
-            return ( 1.0/ (1.0 + pow( fabs( (x-c)/a ), 2*b ) ) );
+        case zmf:
+            a = points[0];
+            b = points[1];
+            if (x<=a) return 1.0;
+            if (x>=a && x<=((a+b)/2)) return (1.0 - (2.0*pow( (x-a)/(b-a) , 2 )));
+            if (x<=b && x>=((a+b)/2)) return (2.0*pow( (x-b)/(b-a) , 2 ));
+            if (x>=b) return 0.0;
+            return 0.0;
         case singletonmf:
+            a = points[0];
             return ( (x==a)? 1.0 : 0.0 );
         default:
             return 0.0;
