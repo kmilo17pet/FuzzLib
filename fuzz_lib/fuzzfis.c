@@ -186,6 +186,7 @@ fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
         case gbellmf:
             a = points[0];
             b = points[1];
+            c = points[2];
             return ( 1.0/ (1.0  +  pow( fabs( (x-c)/a ), 2*b ) ) );
         case gaussmf:
             a = points[0];

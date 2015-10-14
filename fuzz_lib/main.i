@@ -1859,8 +1859,7 @@ fuzz_real_t ParseFuzzValue(FuzzMF_t *mfio, short index);
 
 int FuzzDeFuzz(FuzzFIS_t *obj);
 # 4 "main.c" 2
-
-
+# 13 "main.c"
 FuzzFIS_t flexnav;
 
 FuzzIO_t flexnav_inputs[4];
