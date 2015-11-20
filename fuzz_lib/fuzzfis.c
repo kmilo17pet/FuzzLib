@@ -182,7 +182,7 @@ fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
             b = points[1];
             c = points[2];
             d = points[3];
-            return FuzzMax( FuzzMin( FuzzMin(  (x-a)/(b-a) , 1  ) , (d-x)/(d-c) ) , 0.0 );
+            return FuzzMax( FuzzMin( FuzzMin(  (x-a)/(b-a) , 1.0  ) , (d-x)/(d-c) ) , 0.0 );
         case gbellmf:
             a = points[0];
             b = points[1];
@@ -200,10 +200,10 @@ fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
             d = points[3];
             temp1 = (x<=b);
             temp2 = (x-b);
-            temp = exp((-temp2*temp2)/(2*a*a))*temp1 + (1-temp1);
+            temp = exp((-temp2*temp2)/(2*a*a))*temp1 + (1.0-temp1);
             temp1 = (x>=d);
             temp2 = (x-d);
-            temp *= exp((-temp2*temp2)/(2*c*c))*temp1 + (1-temp1);
+            temp *= exp((-temp2*temp2)/(2*c*c))*temp1 + (1.0-temp1);
             return temp;          
         case sigmf:
             a = points[0];
@@ -219,11 +219,11 @@ fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
             a = points[0];
             b = points[1];
             if (x<=a)                   return 0.0;
-            if (x>=a && x<=((a+b)/2)){
+            if (x>=a && x<=((a+b)/2.0)){
                 temp = (x-a)/(b-a); 
                 return (2.0*temp*temp);
             }
-            if (x<=b && x>=((a+b)/2)){
+            if (x<=b && x>=((a+b)/2.0)){
                 temp = (x-b)/(b-a); 
                 return (1.0 - (2.0*temp*temp));
             }
@@ -233,8 +233,8 @@ fuzz_real_t __fuzz_mf(fuzz_mf_t mf,fuzz_real_t x,fuzz_real_t *points){
             a = points[0];
             b = points[1];
             if (x<=a)                   return 1.0;
-            if (x>=a && x<=((a+b)/2))   return (1.0 - (2.0*pow( (x-a)/(b-a) , 2 )));
-            if (x<=b && x>=((a+b)/2))   return (2.0*pow( (x-b)/(b-a) , 2 ));
+            if (x>=a && x<=((a+b)/2))   return (1.0 - (2.0*pow( (x-a)/(b-a) , 2.0 )));
+            if (x<=b && x>=((a+b)/2))   return (2.0*pow( (x-b)/(b-a) , 2.0 ));
             if (x>=b)                   return 0.0;
             return 0.0;
         case singletonmf:

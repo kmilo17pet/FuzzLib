@@ -1,4 +1,16 @@
-function varargout=fistocfuzz(fis)
+function varargout=fis2cfuzz(varargin)
+    if nargin>0
+        fis=varargin{1};
+        if(nargin==2)
+            if(strcmpi(varargin{2},'about'))
+                disp('FIS2Cfuzz : FIS C code generator for fuzzlib');
+                disp('Developed by: Eng. Juan Camilo Gómez Cadavid');
+                return;
+            end
+        end
+    else
+        error('A FIS Object must be supplied');
+    end
     nextline = char([10]); %#ok
     tabchar = char([9]); %#ok
     objname = fix2varname(fis.name);
@@ -34,14 +46,12 @@ function varargout=fistocfuzz(fis)
     code = [code '/* I/O Fuzzy Objects */' nextline];
     fuzzin_arrname = [objname '_inputs'];
     fuzzout_arrname = [objname '_outputs'];
-    code = [ code 'FuzzIO_t ' fuzzin_arrname '[' num2str(nins) '];' nextline];
-    code = [ code 'FuzzIO_t ' fuzzout_arrname '[' num2str(nouts) '];' nextline];
+    code = [ code 'FuzzIO_t ' fuzzin_arrname '[' num2str(nins) '], '  fuzzout_arrname '[' num2str(nouts) '];' nextline];
     nin_mfs = length([fis.input(:).mf]);
     nout_mfs = length([fis.output(:).mf]);
     code = [code '/* I/O Membership Objects */' nextline];
-    code = [ code 'FuzzMF_t MFin[' num2str(nin_mfs) '];' nextline];
-    code = [ code 'FuzzMF_t MFout[' num2str(nout_mfs) '];' nextline];
-    code = [code '/*  Input Labels */' nextline];
+    code = [ code 'FuzzMF_t MFin[' num2str(nin_mfs) '], MFout[' num2str(nout_mfs) '];' nextline];
+    code = [code '/*  I/O Names */' nextline];
     code = [ code 'enum { '];
     for k=1:length(fis.input)
         innames{k}=fix2varname(fis.input(k).name);%#ok
@@ -49,7 +59,7 @@ function varargout=fistocfuzz(fis)
     end
     code(end-1)=[];
     code = [ code '};' nextline];
-    code = [code '/* Output Labels */' nextline];
+    code = [code  '/*  I/O Membership functions tags */' nextline];
     code = [ code 'enum { '];
     for k=1:length(fis.output)
         outnames{k} = fix2varname(fis.output(k).name);%#ok
@@ -185,9 +195,9 @@ function varargout=fistocfuzz(fis)
     if(nargout<=0)
         f=findobj('tag','fuzzlib_outfig');
         if(isempty(f))
-            f=figure('name','Generated C-ANSI Code','resize','off','NumberTitle','off','menubar','none','position',[0 0 800 500],'visible','off','tag','fuzzlib_outfig');
+            f=figure('name','Generated C-ANSI Code','resize','off','NumberTitle','off','menubar','none','position',[0 0 1000 500],'visible','off','tag','fuzzlib_outfig');
             movegui(f,'center');
-            ed=uicontrol('parent',f,'style','edit','fontsize',7.5,'fontname','consolas','position',[10 10 780 480],'max',2,'string',code,'HorizontalAlignment','left','tag','fuzzlib_outedt'); %#ok
+            ed=uicontrol('parent',f,'style','edit','fontsize',7.5,'fontname','consolas','position',[10 10 980 480],'max',200,'string',code,'HorizontalAlignment','left','tag','fuzzlib_outedt'); %#ok
             set(f,'visible','on');        
         end
         ed=findobj('tag','fuzzlib_outedt');

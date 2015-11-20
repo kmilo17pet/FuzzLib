@@ -53,6 +53,8 @@ typedef unsigned char fuzz_output_t;
 typedef unsigned char fuzz_var_t;
 typedef int fuzz_rules_t;
 
+#define fuzz_tags_t enum;
+
 typedef fuzz_real_t (*SugenoFcn)(fuzz_real_t*);
 typedef fuzz_real_t (*FuzzMethod)(fuzz_real_t, fuzz_real_t); 
 
